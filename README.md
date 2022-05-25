@@ -1,0 +1,1 @@
+bash project, shell basics
