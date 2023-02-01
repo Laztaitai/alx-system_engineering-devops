@@ -1,31 +1,31 @@
 #!/usr/bin/python3
-"""Queries the Reddit API and
-returns a list containing the
-titles of all hot articles for
-a given subreddit.
+"""Returns titles of all hot articles for a given subreddit"""
 
-If no results are found for the
-given subreddit, the function
-should return None.
-"""
 import requests
 
 
-def recurse(subreddit, hot_list=[], after=''):
-    """Returns a list containing the titles of all
-    hot articles for a given subreddit.
-    """
-    # Set the Default URL strings
-    base_url = 'https://www.reddit.com'
-    api_uri = '{base}/r/{subreddit}/hot.json'.format(base=base_url,
-                                                     subreddit=subreddit)
+def recurse(subreddit, hot_list=[], after="", count=0):
+    """Return titles of all hot articles given a subreddit"""
+    BASE_URL = 'https://api.reddit.com'
+    headers = {
+        "User-Agent": "ChangeMeClient/0.1 by Lateedah"
+    }
+    params = {
+        "after": after,
+        "count": count
+    }
+    res = requests.get("{}/r/{}/hot".format(BASE_URL, subreddit),
+                       headers=headers, params=params)
+    if res.status_code == 404:
+        return None
+    data = res.json().get('data')
+    after = data.get('after')
+    count += data.get('dist')
+    children = data.get('children')
+    for child in children:
+        hot_list.append(child.get('data').get('title'))
 
-    # Set an User-Agent
-    user_agent = {'User-Agent': 'Python/requests'}
+    if after is not None:
+        recurse(subreddit, hot_list, after, count)
 
-    # Set the Query Strings to Request
-    payload = {'after': after, 'limit': '100'}
-
-    # Get the Response of the Reddit API
-    res = requests.get(api_uri, headers=user_agent,
-
+    return hot_list
